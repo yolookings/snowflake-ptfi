@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+node_modules/
+dist/
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+
+# Local application secrets and credential files
+.streamlit/secrets.toml
+.aws/credentials
+.aws/config
+.vercel/
+.netlify/
+.firebase/
+secrets.*
+*.secret
+*.token
+credentials*.json
+service-account*.json
+*-service-account.json
+
+# Private keys and certificate containers
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
