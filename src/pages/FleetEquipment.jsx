@@ -23,9 +23,9 @@ import { Panel } from "../components/ui/Panel";
 import { SectionHeading } from "../components/ui/SectionHeading";
 
 const STATUS_COLORS = {
-  Normal: "#1d9b68",
-  Monitoring: "#c98a16",
-  Maintenance: "#e81c24",
+  Normal: "var(--color-success)",
+  Monitoring: "var(--color-warning)",
+  Maintenance: "var(--color-danger)",
 };
 
 function getAssetSummary(rows) {
@@ -101,8 +101,8 @@ export function FleetEquipment({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Asset health"
-        title="Fleet performance board"
+        eyebrow=""
+        title="Fleet performance"
         subtitle="Bandingkan uptime dan status maintenance per tipe alat berat."
       />
       <div className="dashboard-grid dashboard-grid--detail">
@@ -122,8 +122,7 @@ export function FleetEquipment({ data }) {
                 margin={{ top: 8, right: 32, left: 4, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   horizontal={false}
                 />
                 <XAxis
@@ -143,8 +142,8 @@ export function FleetEquipment({ data }) {
                 <Tooltip formatter={(value) => [formatPercent(value), "Uptime"]} />
                 <Bar
                   dataKey="uptime"
-                  fill="#00b9f2"
-                  radius={[0, 6, 6, 0]}
+                  fill="var(--color-primary)"
+                  radius={[0, 2, 2, 0]}
                   barSize={24}
                 />
               </BarChart>
@@ -194,7 +193,7 @@ export function FleetEquipment({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Latest asset register"
+        eyebrow=""
         title="Equipment snapshot"
         subtitle="Asset dengan uptime terendah berada di urutan teratas untuk follow-up."
       />

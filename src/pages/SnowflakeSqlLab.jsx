@@ -99,19 +99,19 @@ export function SnowflakeSqlLab({ data }) {
         table: "production_daily",
         description: "Produksi ore per tanggal, pit, mineral, dan shift.",
         rows: data.production.length,
-        fields: "date · pit · mineral · shift · ore_tonnes · target_tonnes",
+        fields: "date, pit, mineral, shift, ore_tonnes, target_tonnes",
       },
       {
         table: "equipment_daily",
         description: "Uptime, jam operasi, fuel, dan status maintenance fleet.",
         rows: data.equipment.length,
-        fields: "date · asset_id · asset_type · pit · uptime_pct",
+        fields: "date, asset_id, asset_type, pit, uptime_pct",
       },
       {
         table: "logistics_shipments",
         description: "Manifest shipment dari source pit menuju destination port.",
         rows: data.shipments.length,
-        fields: "shipment_id · vessel · destination · eta_date · readiness_pct",
+        fields: "shipment_id, vessel, destination, eta_date, readiness_pct",
       },
     ],
     [data],
@@ -144,14 +144,14 @@ export function SnowflakeSqlLab({ data }) {
           <div className="sql-editor__toolbar">
             <div>
               <div className="panel__eyebrow">Query editor</div>
-              <h2 className="panel__title">Practice against an operational model</h2>
+              <h2 className="panel__title">Run a demo query</h2>
             </div>
             <span className="connection-pill">
-              <span className="status-badge__dot" /> Local preview
+              <span className="status-badge__dot" /> Local data
             </span>
           </div>
           <div className="query-select-wrap">
-            <label htmlFor="query-example">Starter query</label>
+            <label htmlFor="query-example">Query template</label>
             <select
               id="query-example"
               value={selectedExample}
@@ -219,8 +219,8 @@ export function SnowflakeSqlLab({ data }) {
         </Panel>
 
         <Panel
-          title="Practice track"
-          subtitle="Naikkan tingkat kesulitan secara bertahap."
+          title="Query flow"
+          subtitle="Urutan sederhana untuk eksplorasi data."
         >
           <div className="practice-track">
             <div className="practice-step practice-step--done">
@@ -242,7 +242,7 @@ export function SnowflakeSqlLab({ data }) {
             <div className="practice-step">
               <span>03</span>
               <div>
-                <strong>Join mindset</strong>
+                <strong>Join data</strong>
                 <p>Gabungkan produksi dengan fleet uptime.</p>
               </div>
               <Icon name="lock" />
@@ -251,7 +251,7 @@ export function SnowflakeSqlLab({ data }) {
           <div className="sql-tip">
             <Icon name="lightbulb" />
             <div>
-              <strong>Cost-aware querying</strong>
+              <strong>Query cost</strong>
               <p>
                 Selalu gunakan filter tanggal dan <code>LIMIT</code> ketika eksplorasi data besar.
               </p>

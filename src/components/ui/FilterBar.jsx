@@ -37,8 +37,8 @@ export function FilterBar({ filters, onChange, onReset, onRefresh, syncTime }) {
           <Icon name="sliders" />
         </span>
         <div>
-          <strong>Operation lens</strong>
-          <span>Filter global dashboard</span>
+          <strong>Filter tampilan</strong>
+          <span>Berlaku untuk semua modul</span>
         </div>
       </div>
       <div className="filter-bar__fields">

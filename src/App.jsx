@@ -15,24 +15,19 @@ import { SnowflakeSqlLab } from "./pages/SnowflakeSqlLab";
 
 const PAGE_COPY = {
   overview: {
-    subtitle:
-      "Satu tampilan untuk membaca ritme produksi ore, kesehatan alat berat, dan kesiapan pengiriman dari pit menuju pelabuhan.",
+    subtitle: "Ringkasan produksi, alat berat, dan pengiriman untuk periode yang dipilih.",
   },
   production: {
-    subtitle:
-      "Telusuri kontribusi pit, mineral, dan shift dengan metrik produksi yang sama seperti pada executive overview.",
+    subtitle: "Bandingkan hasil produksi menurut pit, mineral, dan shift.",
   },
   fleet: {
-    subtitle:
-      "Pantau uptime, utilisasi jam kerja, dan sinyal maintenance dari alat berat yang menopang produksi.",
+    subtitle: "Tinjau uptime, jam operasi, dan status maintenance alat berat.",
   },
   logistics: {
-    subtitle:
-      "Lihat status manifest, readiness, ETA, dan tujuan pengiriman untuk mengantisipasi bottleneck pelabuhan.",
+    subtitle: "Pantau readiness, ETA, tujuan, dan status pengiriman.",
   },
   "sql-lab": {
-    subtitle:
-      "Pilih contoh query, modifikasi SQL, lalu jalankan terhadap adapter demo sebelum dipindahkan ke Snowflake.",
+    subtitle: "Jalankan contoh query terhadap data demo dan lihat hasil agregasinya.",
   },
 };
 
@@ -157,9 +152,9 @@ export function App() {
               Demo data
             </Badge>
             <span>
-              <strong>MINE_ANALYTICS_WH</strong> · Auto-suspend 60s
+              <strong>MINE_ANALYTICS_WH</strong> | Auto-suspend 60s
             </span>
-            <span>Last sync {formatTime(lastSync)} WIB</span>
+            <span>Sync {formatTime(lastSync)} WIB</span>
           </div>
         }
       />
@@ -173,7 +168,7 @@ export function App() {
       {renderActivePage(activeModule, filteredData, setActiveModule)}
       <footer className="app-footer">
         <span>PTFI Mine Intelligence</span>
-        <span>Executive operations cockpit · Demo data sintetis untuk latihan query</span>
+        <span>Prototype | Data sintetis untuk latihan query</span>
         <span>
           <Icon name="shield-halved" /> Cost guardrail active
         </span>

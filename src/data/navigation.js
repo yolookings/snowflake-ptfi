@@ -21,27 +21,27 @@ export const NAVIGATION = [
 export const MODULE_META = {
   overview: {
     label: "Executive Overview",
-    kicker: "Executive control room",
+    kicker: "Overview",
     title: "Operations & Logistics Dashboard",
   },
   production: {
     label: "Production Detail",
-    kicker: "Operational analytics",
+    kicker: "Production",
     title: "Production Detail",
   },
   fleet: {
     label: "Fleet & Equipment",
-    kicker: "Asset performance",
+    kicker: "Fleet",
     title: "Fleet & Equipment",
   },
   logistics: {
     label: "Logistics Control Tower",
-    kicker: "Supply chain visibility",
+    kicker: "Logistics",
     title: "Logistics Control Tower",
   },
   "sql-lab": {
     label: "Snowflake SQL Lab",
-    kicker: "Hands-on workspace",
+    kicker: "SQL Lab",
     title: "Snowflake SQL Lab",
   },
 };

@@ -111,8 +111,8 @@ export function ExecutiveOverview({ data, onNavigate }) {
       </div>
 
       <SectionHeading
-        eyebrow="Operational pulse"
-        title="Production performance"
+        eyebrow=""
+        title="Production trend"
         subtitle="Actual ore terhadap target harian pada periode terpilih."
         action={
           <button
@@ -144,29 +144,8 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 data={trendRows}
                 margin={{ top: 12, right: 16, left: -12, bottom: 0 }}
               >
-                <defs>
-                  <linearGradient
-                    id="actualOre"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="#00b9f2"
-                      stopOpacity={0.36}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="#00b9f2"
-                      stopOpacity={0.02}
-                    />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   vertical={false}
                 />
                 <XAxis
@@ -193,15 +172,15 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 <Area
                   type="monotone"
                   dataKey="actual"
-                  stroke="#00b9f2"
-                  strokeWidth={3}
-                  fill="url(#actualOre)"
+                  stroke="var(--color-primary)"
+                  strokeWidth={2}
+                  fill="var(--color-primary-light)"
                 />
                 <Area
                   type="monotone"
                   dataKey="target"
-                  stroke="#e81c24"
-                  strokeWidth={2}
+                  stroke="#8b98a3"
+                  strokeWidth={1.5}
                   strokeDasharray="5 5"
                   fill="transparent"
                 />
@@ -245,8 +224,7 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 margin={{ top: 8, right: 22, left: 4, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   horizontal={false}
                 />
                 <XAxis
@@ -266,8 +244,8 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 <Tooltip formatter={(value) => [formatTonnes(value), "Actual ore"]} />
                 <Bar
                   dataKey="actual"
-                  fill="#0b1f3a"
-                  radius={[0, 5, 5, 0]}
+                  fill="var(--color-navy)"
+                  radius={[0, 2, 2, 0]}
                   barSize={24}
                 />
               </BarChart>
@@ -275,14 +253,14 @@ export function ExecutiveOverview({ data, onNavigate }) {
           </div>
           <div className="panel-link-row">
             <span>Highest contribution</span>
-            <strong>{drilldownRows.sort((a, b) => b.actual - a.actual)[0]?.label || "—"}</strong>
+            <strong>{drilldownRows.sort((a, b) => b.actual - a.actual)[0]?.label || "-"}</strong>
           </div>
         </Panel>
       </div>
 
       <SectionHeading
-        eyebrow="Readiness signals"
-        title="Fleet health & shipment watchlist"
+        eyebrow=""
+        title="Fleet and shipment status"
         subtitle="Sinyal operasional yang perlu diperhatikan sebelum masuk ke detail."
       />
       <div className="dashboard-grid dashboard-grid--lower">
@@ -311,8 +289,7 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 margin={{ top: 8, right: 28, left: 4, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   horizontal={false}
                 />
                 <XAxis
@@ -333,8 +310,8 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 <Tooltip formatter={(value) => [formatPercent(value), "Uptime"]} />
                 <Bar
                   dataKey="uptime"
-                  fill="#00b9f2"
-                  radius={[0, 5, 5, 0]}
+                  fill="var(--color-primary)"
+                  radius={[0, 2, 2, 0]}
                   barSize={20}
                 />
               </BarChart>
@@ -404,10 +381,10 @@ export function ExecutiveOverview({ data, onNavigate }) {
 
       <div className="insight-strip">
         <div className="insight-strip__icon">
-          <Icon name="wand-magic-sparkles" />
+          <Icon name="flag" />
         </div>
         <div>
-          <strong>Operations insight</strong>
+          <strong>Follow-up</strong>
           <p>
             Dokumentasi shipment dengan readiness di bawah 85% sebaiknya di-follow-up sebelum window
             loading berikutnya.
@@ -418,7 +395,7 @@ export function ExecutiveOverview({ data, onNavigate }) {
           type="button"
           onClick={() => onNavigate("sql-lab")}
         >
-          Explore with SQL <Icon name="arrow-right" />
+          Open Data Lab <Icon name="arrow-right" />
         </button>
       </div>
     </div>

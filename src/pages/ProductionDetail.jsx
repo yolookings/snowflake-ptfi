@@ -77,8 +77,8 @@ export function ProductionDetail({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Contribution map"
-        title="Production mix by dimension"
+        eyebrow=""
+        title="Production by dimension"
         subtitle="Ubah dimensi untuk melihat konsentrasi produksi terbesar."
         action={
           <div
@@ -113,8 +113,7 @@ export function ProductionDetail({ data }) {
                 margin={{ top: 12, right: 18, left: -8, bottom: 8 }}
               >
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   vertical={false}
                 />
                 <XAxis
@@ -131,8 +130,8 @@ export function ProductionDetail({ data }) {
                 <Tooltip formatter={(value) => [formatTonnes(value), "Actual ore"]} />
                 <Bar
                   dataKey="actual"
-                  fill="#00b9f2"
-                  radius={[6, 6, 0, 0]}
+                  fill="var(--color-primary)"
+                  radius={[2, 2, 0, 0]}
                   barSize={42}
                 />
               </BarChart>
@@ -170,7 +169,7 @@ export function ProductionDetail({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Query-ready detail"
+        eyebrow=""
         title="Production rows"
         subtitle="Baris teragregasi ini sengaja dibuat dekat dengan struktur tabel Snowflake untuk latihan validasi query."
         action={

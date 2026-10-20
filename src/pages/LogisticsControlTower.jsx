@@ -82,8 +82,8 @@ export function LogisticsControlTower({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Shipment flow"
-        title="Port readiness board"
+        eyebrow=""
+        title="Port readiness"
         subtitle="Distribusi volume dan kesiapan berdasarkan tujuan pelabuhan."
       />
       <div className="dashboard-grid dashboard-grid--detail">
@@ -103,8 +103,7 @@ export function LogisticsControlTower({ data }) {
                 margin={{ top: 8, right: 28, left: 4, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#edf1f5"
-                  strokeDasharray="3 3"
+                  stroke="#e2e8ec"
                   horizontal={false}
                 />
                 <XAxis
@@ -124,8 +123,8 @@ export function LogisticsControlTower({ data }) {
                 <Tooltip formatter={(value) => [formatTonnes(value), "Volume"]} />
                 <Bar
                   dataKey="tonnes"
-                  fill="#0b1f3a"
-                  radius={[0, 6, 6, 0]}
+                  fill="var(--color-navy)"
+                  radius={[0, 2, 2, 0]}
                   barSize={26}
                 />
               </BarChart>
@@ -163,7 +162,7 @@ export function LogisticsControlTower({ data }) {
       </div>
 
       <SectionHeading
-        eyebrow="Manifest control"
+        eyebrow=""
         title="Shipment manifest"
         subtitle="Gunakan data ini sebagai titik awal drill-down ke SQL Lab."
       />
