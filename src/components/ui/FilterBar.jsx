@@ -1,89 +1,87 @@
-import { MINERAL_OPTIONS, PERIOD_OPTIONS, PIT_OPTIONS, SHIFT_OPTIONS } from "../../data/dashboard";
+import { DEFAULT_FILTERS, PERIOD_OPTIONS, getFilterOptions } from "../../data/dashboard";
 import { Icon } from "./Icon";
 
-function FilterSelect({ label, value, options, onChange }) {
+function Slicer({ label, value, options, onChange }) {
+  const active = value !== DEFAULT_FILTERS[label.key];
   return (
-    <label className="filter-field">
-      <span>{label}</span>
+    <label className={`slicer ${active ? "slicer--active" : ""}`}>
+      <span>{label.text}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
-        {options.map((option) => {
-          const optionValue = typeof option === "string" ? option : option.value;
-          const optionLabel = typeof option === "string" ? option : option.label;
-          return (
-            <option
-              value={optionValue}
-              key={optionValue}
-            >
-              {optionLabel}
-            </option>
-          );
-        })}
+        {options.map((option) => (
+          <option
+            value={option}
+            key={option}
+          >
+            {option}
+          </option>
+        ))}
       </select>
     </label>
   );
 }
 
-export function FilterBar({ filters, onChange, onReset, onRefresh, syncTime }) {
+export function FilterBar({ data, filters, onChange, onReset, syncTime }) {
+  const options = getFilterOptions(data);
+  const dirty = Object.keys(DEFAULT_FILTERS).some((key) => filters[key] !== DEFAULT_FILTERS[key]);
+
   return (
     <section
-      className="filter-bar card-surface"
-      aria-label="Filter operasi"
+      className="slicer-bar"
+      aria-label="Filter laporan"
     >
-      <div className="filter-bar__identity">
-        <span className="filter-bar__icon">
-          <Icon name="sliders" />
+      <div className="slicer-bar__group">
+        <span className="slicer-bar__title">
+          <Icon name="filter" /> Slicer
         </span>
-        <div>
-          <strong>Filter tampilan</strong>
-          <span>Berlaku untuk semua modul</span>
+        <div
+          className="segmented"
+          role="group"
+          aria-label="Periode"
+        >
+          {PERIOD_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={filters.period === option.value ? "is-active" : ""}
+              onClick={() => onChange("period", option.value)}
+            >
+              {option.value} hari
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="filter-bar__fields">
-        <FilterSelect
-          label="Periode"
-          value={filters.period}
-          options={PERIOD_OPTIONS}
-          onChange={(value) => onChange("period", value)}
-        />
-        <FilterSelect
-          label="Mineral"
+        <Slicer
+          label={{ key: "mineral", text: "Mineral" }}
           value={filters.mineral}
-          options={MINERAL_OPTIONS}
+          options={options.mineral}
           onChange={(value) => onChange("mineral", value)}
         />
-        <FilterSelect
-          label="Pit / area"
+        <Slicer
+          label={{ key: "pit", text: "Pit" }}
           value={filters.pit}
-          options={PIT_OPTIONS}
+          options={options.pit}
           onChange={(value) => onChange("pit", value)}
         />
-        <FilterSelect
-          label="Shift"
+        <Slicer
+          label={{ key: "shift", text: "Shift" }}
           value={filters.shift}
-          options={SHIFT_OPTIONS}
+          options={options.shift}
           onChange={(value) => onChange("shift", value)}
         />
       </div>
-      <div className="filter-bar__actions">
-        <button
-          className="button button--ghost"
-          type="button"
-          onClick={onReset}
-        >
-          Reset
-        </button>
-        <button
-          className="button button--primary button--icon"
-          type="button"
-          onClick={onRefresh}
-        >
-          <Icon name="rotate" />
-          Refresh
-        </button>
-        <span className="filter-bar__sync">Synced {syncTime}</span>
+      <div className="slicer-bar__group">
+        {dirty && (
+          <button
+            className="button button--link"
+            type="button"
+            onClick={onReset}
+          >
+            <Icon name="eraser" /> Hapus filter
+          </button>
+        )}
+        <span className="slicer-bar__sync">Sync {syncTime}</span>
       </div>
     </section>
   );

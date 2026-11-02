@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { NAVIGATION } from "../../data/navigation";
 import { Icon } from "../ui/Icon";
 
-export function Navbar({ activeModule, onNavigate, onOpenMobile }) {
+export function Navbar({ activeModule, user, onNavigate, onOpenMobile }) {
   const [openMenu, setOpenMenu] = useState(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const menuRef = useRef(null);
+  const navigation = NAVIGATION;
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -72,7 +73,7 @@ export function Navbar({ activeModule, onNavigate, onOpenMobile }) {
           className="navbar__menu"
           aria-label="Navigasi utama"
         >
-          {NAVIGATION.map((item) => {
+          {navigation.map((item) => {
             const isActive =
               item.key === "overview"
                 ? activeModule === "overview"
@@ -157,17 +158,16 @@ export function Navbar({ activeModule, onNavigate, onOpenMobile }) {
             <Icon name="bell" />
             <span className="notification-dot" />
           </button>
-          <button
+          <div
             className="profile-button"
-            type="button"
+            aria-label={`Profil aktif: ${user.name}`}
           >
-            <span className="avatar">AP</span>
+            <span className="avatar">{user.initials}</span>
             <span className="profile-button__copy">
-              <strong>Arif Pratama</strong>
-              <small>Ops Intelligence</small>
+              <strong>{user.name}</strong>
+              <small>{user.roleLabel}</small>
             </span>
-            <Icon name="chevron-down" />
-          </button>
+          </div>
         </div>
       </div>
 
@@ -193,17 +193,19 @@ export function Navbar({ activeModule, onNavigate, onOpenMobile }) {
               <kbd>ESC</kbd>
             </div>
             <div className="command-palette__label">Jump to module</div>
-            {NAVIGATION.flatMap((item) => item.children || [item]).map((item) => (
-              <button
-                type="button"
-                key={item.key}
-                onClick={() => navigateAndClose(item.key)}
-              >
-                <Icon name={item.icon} />
-                <span>{item.label}</span>
-                <Icon name="arrow-up-right-from-square" />
-              </button>
-            ))}
+            {navigation
+              .flatMap((item) => item.children || [item])
+              .map((item) => (
+                <button
+                  type="button"
+                  key={item.key}
+                  onClick={() => navigateAndClose(item.key)}
+                >
+                  <Icon name={item.icon} />
+                  <span>{item.label}</span>
+                  <Icon name="arrow-up-right-from-square" />
+                </button>
+              ))}
           </div>
         </div>
       )}

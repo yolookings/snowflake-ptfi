@@ -15,7 +15,6 @@ export const NAVIGATION = [
       { key: "logistics", label: "Logistics Control Tower", icon: "ship", group: "Supply chain" },
     ],
   },
-  { key: "sql-lab", label: "Data Lab", icon: "database" },
 ];
 
 export const MODULE_META = {
@@ -38,10 +37,5 @@ export const MODULE_META = {
     label: "Logistics Control Tower",
     kicker: "Logistics",
     title: "Logistics Control Tower",
-  },
-  "sql-lab": {
-    label: "Snowflake SQL Lab",
-    kicker: "SQL Lab",
-    title: "Snowflake SQL Lab",
   },
 };

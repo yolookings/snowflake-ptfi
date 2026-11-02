@@ -3,7 +3,7 @@ import { useState } from "react";
 import { MobileSidebar } from "./MobileSidebar";
 import { Navbar } from "./Navbar";
 
-export function AppShell({ activeModule, onNavigate, children }) {
+export function AppShell({ activeModule, onNavigate, user, connectionStatus, children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNavigate = (moduleKey) => {
@@ -17,11 +17,14 @@ export function AppShell({ activeModule, onNavigate, children }) {
       <MobileSidebar
         open={mobileOpen}
         activeModule={activeModule}
+        user={user}
+        connectionStatus={connectionStatus}
         onClose={() => setMobileOpen(false)}
         onNavigate={handleNavigate}
       />
       <Navbar
         activeModule={activeModule}
+        user={user}
         onNavigate={handleNavigate}
         onOpenMobile={() => setMobileOpen(true)}
       />

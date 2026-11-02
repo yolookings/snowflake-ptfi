@@ -164,7 +164,7 @@ export function LogisticsControlTower({ data }) {
       <SectionHeading
         eyebrow=""
         title="Shipment manifest"
-        subtitle="Gunakan data ini sebagai titik awal drill-down ke SQL Lab."
+        subtitle="Gunakan manifest ini untuk menindaklanjuti readiness dan ETA shipment."
       />
       <Panel>
         <DataTable
@@ -200,7 +200,7 @@ export function LogisticsControlTower({ data }) {
           ]}
         />
         <div className="panel-footer-note">
-          <Icon name="circle-info" /> Data manifest sintetis untuk latihan monitoring supply chain.
+          <Icon name="circle-info" /> Data manifest dimuat langsung dari Snowflake.
         </div>
       </Panel>
     </div>

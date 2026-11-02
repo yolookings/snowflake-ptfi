@@ -28,6 +28,10 @@ service-account*.json
 # Private keys and certificate containers
 *.pem
 *.key
+*.p8
 *.p12
 *.pfx
 *.jks
+
+# Vercel import file (contains secrets)
+env.txt

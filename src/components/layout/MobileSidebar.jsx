@@ -1,7 +1,9 @@
 import { NAVIGATION } from "../../data/navigation";
 import { Icon } from "../ui/Icon";
 
-export function MobileSidebar({ open, activeModule, onClose, onNavigate }) {
+export function MobileSidebar({ open, activeModule, user, connectionStatus, onClose, onNavigate }) {
+  const isSnowflake = connectionStatus === "connected";
+
   return (
     <>
       <div
@@ -66,11 +68,13 @@ export function MobileSidebar({ open, activeModule, onClose, onNavigate }) {
         </nav>
         <div className="mobile-sidebar__footer">
           <div className="sidebar-resource-card">
-            <span className="status-badge status-badge--success">
-              <span className="status-badge__dot" /> Live demo
+            <span className={`status-badge status-badge--${isSnowflake ? "success" : "neutral"}`}>
+              <span className="status-badge__dot" /> {isSnowflake ? "Snowflake" : "Not connected"}
             </span>
-            <strong>Mine Analytics WH</strong>
-            <span>Auto-suspend 60 seconds</span>
+            <strong>
+              {user.name} | {user.roleLabel}
+            </strong>
+            <span>FREEPORT_MINING_DB | Read-only</span>
           </div>
         </div>
       </aside>

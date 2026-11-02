@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "api": "node --env-file=.env server/index.js",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "oxlint src vite.config.js",
-    "lint:fix": "oxlint --fix src vite.config.js",
+    "lint": "oxlint src server vite.config.js",
+    "lint:fix": "oxlint --fix src server vite.config.js",
     "fmt": "oxfmt .",
     "fmt:check": "oxfmt --check .",
     "check": "npm run fmt:check && npm run lint && npm run build"
@@ -19,7 +20,8 @@
     "@fortawesome/fontawesome-free": "^6.7.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.15.0"
+    "recharts": "^2.15.0",
+    "snowflake-sdk": "^3.4.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

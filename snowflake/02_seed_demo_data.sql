@@ -1,4 +1,5 @@
--- Seed deterministic demo data. Run 01_create_objects.sql first.
+-- Seed deterministic demo data for the legacy sandbox only.
+-- Do not run this script against FREEPORT_MINING_DB or production tables.
 -- This script resets only the three practice tables.
 
 USE DATABASE PTFI_MINE_ANALYTICS;

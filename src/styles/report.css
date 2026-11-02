@@ -1,0 +1,311 @@
+/* Power BI style report canvas — loaded after avian.css */
+html,
+body,
+#root {
+  background: #f3f2f1;
+}
+
+.main {
+  padding: 18px 24px 20px;
+}
+
+/* Compact report title bar */
+.page-header {
+  align-items: center;
+  margin: 0 0 12px;
+}
+
+.page-kicker {
+  display: none;
+}
+
+.page-header h1 {
+  font-size: 22px;
+}
+
+.page-header p {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+/* Slicer bar */
+.slicer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #e1dfdd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.slicer-bar__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.slicer-bar__title {
+  color: #605e5c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.slicer-bar__sync {
+  color: #8a8886;
+  font-size: 11px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid #c8c6c4;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmented button {
+  min-height: 30px;
+  padding: 0 12px;
+  background: #fff;
+  color: #323130;
+  font-size: 12px;
+  border-right: 1px solid #c8c6c4;
+}
+
+.segmented button:last-child {
+  border-right: 0;
+}
+
+.segmented button.is-active {
+  background: #118dff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.slicer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #605e5c;
+  font-size: 12px;
+}
+
+.slicer select {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #c8c6c4;
+  border-radius: 4px;
+  background: #fff;
+  color: #323130;
+  font-size: 12px;
+}
+
+.slicer--active select {
+  border-color: #118dff;
+  background: #eaf4ff;
+  color: #0a5ca8;
+  font-weight: 600;
+}
+
+/* KPI row */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 124px;
+  padding: 12px 14px 38px;
+  overflow: hidden;
+  border: 1px solid #e1dfdd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.kpi__label {
+  color: #605e5c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kpi__value {
+  margin-top: 4px;
+  color: #201f1e;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.kpi__note {
+  margin-top: 2px;
+  color: #8a8886;
+  font-size: 11px;
+}
+
+.kpi__note--good {
+  color: #107c10;
+  font-weight: 600;
+}
+
+.kpi__note--bad {
+  color: #d13438;
+  font-weight: 600;
+}
+
+.kpi__spark {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 34px;
+  pointer-events: none;
+}
+
+/* Visual canvas */
+.canvas {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.visual {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 300px;
+  border: 1px solid #e1dfdd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.visual--4 {
+  grid-column: span 4;
+}
+.visual--5 {
+  grid-column: span 5;
+}
+.visual--7 {
+  grid-column: span 7;
+}
+.visual--8 {
+  grid-column: span 8;
+}
+
+.visual__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 0;
+}
+
+.visual__head h3 {
+  margin: 0;
+  color: #201f1e;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.visual__head p {
+  margin: 1px 0 0;
+  color: #8a8886;
+  font-size: 11px;
+}
+
+.visual__body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px 10px 10px;
+}
+
+.visual__scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.visual__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #8a8886;
+  font-size: 12px;
+}
+
+.recharts-text {
+  fill: #605e5c;
+  font-size: 11px;
+}
+
+.recharts-legend-item-text {
+  color: #605e5c !important;
+}
+
+/* Existing pages: flat white tiles on gray canvas */
+.panel,
+.card-surface,
+.metric-card {
+  border: 1px solid #e1dfdd;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.panel__title {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.metric-card__value {
+  font-family: var(--font-display);
+}
+
+.data-table th {
+  background: #faf9f8;
+  color: #605e5c;
+}
+
+@media (max-width: 1280px) {
+  .kpi-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding: 14px 12px;
+  }
+
+  .kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .visual--4,
+  .visual--5,
+  .visual--7,
+  .visual--8 {
+    grid-column: span 12;
+  }
+}
+
+.donut {
+  width: 100%;
+  height: 100%;
+}

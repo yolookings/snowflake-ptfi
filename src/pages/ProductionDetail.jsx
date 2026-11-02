@@ -61,7 +61,7 @@ export function ProductionDetail({ data }) {
           value={formatPercent(averageGrade, 2)}
           delta="Quality signal"
           deltaTone="neutral"
-          note="Weighted demo data"
+          note="Weighted average"
           icon="flask"
           tone="gold"
         />
@@ -171,7 +171,7 @@ export function ProductionDetail({ data }) {
       <SectionHeading
         eyebrow=""
         title="Production rows"
-        subtitle="Baris teragregasi ini sengaja dibuat dekat dengan struktur tabel Snowflake untuk latihan validasi query."
+        subtitle="Baris produksi yang dimuat dari tabel Snowflake untuk periode terpilih."
         action={
           <span className="section-heading__count">
             {data.production.length.toLocaleString("id-ID")} rows in scope

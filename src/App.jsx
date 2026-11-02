@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "./components/layout/AppShell";
+import { DataConnectionState } from "./components/ui/DataConnectionState";
 import { Badge } from "./components/ui/Badge";
 import { FilterBar } from "./components/ui/FilterBar";
 import { Icon } from "./components/ui/Icon";
 import { PageHeader } from "./components/ui/PageHeader";
-import { DEFAULT_FILTERS, createDashboardData, filterDashboardData } from "./data/dashboard";
+import { DEFAULT_FILTERS, EMPTY_DASHBOARD_DATA, filterDashboardData } from "./data/dashboard";
 import { MODULE_META } from "./data/navigation";
+import { CURRENT_USER } from "./data/users";
+import { fetchDashboardData } from "./lib/api";
 import { FleetEquipment } from "./pages/FleetEquipment";
 import { ExecutiveOverview } from "./pages/ExecutiveOverview";
 import { LogisticsControlTower } from "./pages/LogisticsControlTower";
 import { ProductionDetail } from "./pages/ProductionDetail";
-import { SnowflakeSqlLab } from "./pages/SnowflakeSqlLab";
 
 const PAGE_COPY = {
   overview: {
-    subtitle: "Ringkasan produksi, alat berat, dan pengiriman untuk periode yang dipilih.",
+    subtitle: "Ringkasan produksi, alat berat, dan pengiriman dari database Snowflake.",
   },
   production: {
     subtitle: "Bandingkan hasil produksi menurut pit, mineral, dan shift.",
@@ -26,9 +28,11 @@ const PAGE_COPY = {
   logistics: {
     subtitle: "Pantau readiness, ETA, tujuan, dan status pengiriman.",
   },
-  "sql-lab": {
-    subtitle: "Jalankan contoh query terhadap data demo dan lihat hasil agregasinya.",
-  },
+};
+
+const DEFAULT_SOURCE = {
+  database: "FREEPORT_MINING_DB",
+  schema: "PUBLIC",
 };
 
 function formatTime(date) {
@@ -39,15 +43,17 @@ function formatTime(date) {
   }).format(date);
 }
 
-function renderActivePage(activeModule, data, onNavigate) {
+function renderActivePage(activeModule, data, onNavigate, report) {
   if (activeModule === "production") return <ProductionDetail data={data} />;
   if (activeModule === "fleet") return <FleetEquipment data={data} />;
   if (activeModule === "logistics") return <LogisticsControlTower data={data} />;
-  if (activeModule === "sql-lab") return <SnowflakeSqlLab data={data} />;
   return (
     <ExecutiveOverview
       data={data}
       onNavigate={onNavigate}
+      allData={report.allData}
+      filters={report.filters}
+      onFilterChange={report.onFilterChange}
     />
   );
 }
@@ -57,10 +63,16 @@ export function App() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [lastSync, setLastSync] = useState(() => new Date());
   const [toast, setToast] = useState(null);
-  const allData = useMemo(() => createDashboardData(), []);
+  const [allData, setAllData] = useState(EMPTY_DASHBOARD_DATA);
+  const [connection, setConnection] = useState({
+    status: "loading",
+    message: "Menghubungkan ke Snowflake...",
+    source: DEFAULT_SOURCE,
+  });
   const filteredData = useMemo(() => filterDashboardData(allData, filters), [allData, filters]);
   const pageMeta = MODULE_META[activeModule];
   const pageCopy = PAGE_COPY[activeModule];
+  const hasData = Object.values(allData).some((rows) => rows.length > 0);
 
   useEffect(() => {
     document.body.dataset.theme = "freeport-blue";
@@ -72,13 +84,69 @@ export function App() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
+  const applyDashboardPayload = (payload) => {
+    const nextData = payload.data || EMPTY_DASHBOARD_DATA;
+    const nextStatus =
+      payload.status || (payload.mode === "snowflake" ? "connected" : "disconnected");
+    setAllData(nextStatus === "connected" ? nextData : EMPTY_DASHBOARD_DATA);
+    setConnection({
+      status: nextStatus,
+      message: payload.message || "Snowflake belum terhubung.",
+      source: payload.source || DEFAULT_SOURCE,
+    });
+    if (nextStatus === "connected") {
+      setLastSync(new Date());
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchDashboardData()
+      .then((payload) => {
+        if (!cancelled) applyDashboardPayload(payload);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAllData(EMPTY_DASHBOARD_DATA);
+        setConnection({
+          status: "disconnected",
+          message: "Snowflake belum terhubung. Periksa konfigurasi koneksi Snowflake.",
+          source: DEFAULT_SOURCE,
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleFilterChange = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
-  const handleRefresh = () => {
-    setLastSync(new Date());
-    setToast({ tone: "success", message: "Data demo berhasil disinkronkan ulang." });
+  const handleRefresh = async () => {
+    setToast({ tone: "info", message: "Menghubungkan ke Snowflake..." });
+
+    try {
+      const payload = await fetchDashboardData();
+      applyDashboardPayload(payload);
+      setToast({
+        tone: payload.status === "connected" ? "success" : "info",
+        message:
+          payload.status === "connected"
+            ? "Data Snowflake berhasil dimuat ulang."
+            : payload.message || "Snowflake belum terhubung.",
+      });
+    } catch {
+      setAllData(EMPTY_DASHBOARD_DATA);
+      setConnection({
+        status: "disconnected",
+        message: "Snowflake belum terhubung. Periksa konfigurasi koneksi Snowflake.",
+        source: DEFAULT_SOURCE,
+      });
+      setToast({ tone: "info", message: "Snowflake belum terhubung." });
+    }
   };
 
   const handleExport = () => {
@@ -103,10 +171,10 @@ export function App() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "ptfi-production-snapshot.csv";
+    anchor.download = "freeport-production-snapshot.csv";
     anchor.click();
     URL.revokeObjectURL(url);
-    setToast({ tone: "info", message: "Snapshot produksi berhasil disiapkan sebagai CSV." });
+    setToast({ tone: "info", message: "Snapshot Snowflake berhasil disiapkan sebagai CSV." });
   };
 
   const resetFilters = () => {
@@ -120,6 +188,7 @@ export function App() {
         className="button button--ghost button--icon"
         type="button"
         onClick={handleExport}
+        disabled={!hasData}
       >
         <Icon name="download" /> Export snapshot
       </button>
@@ -133,10 +202,25 @@ export function App() {
     </>
   );
 
+  const connectionTone =
+    connection.status === "connected"
+      ? "success"
+      : connection.status === "loading"
+        ? "info"
+        : "warning";
+  const connectionLabel =
+    connection.status === "connected"
+      ? "Snowflake terhubung"
+      : connection.status === "loading"
+        ? "Menghubungkan"
+        : "Snowflake belum terhubung";
+
   return (
     <AppShell
       activeModule={activeModule}
       onNavigate={setActiveModule}
+      user={CURRENT_USER}
+      connectionStatus={connection.status}
     >
       <PageHeader
         kicker={pageMeta.kicker}
@@ -146,31 +230,55 @@ export function App() {
         meta={
           <div className="header-meta-stack">
             <Badge
-              tone="success"
+              tone={connectionTone}
               dot
             >
-              Demo data
+              {connectionLabel}
             </Badge>
             <span>
-              <strong>MINE_ANALYTICS_WH</strong> | Auto-suspend 60s
+              <strong>{connection.source.database}</strong> | {connection.source.schema}
             </span>
-            <span>Sync {formatTime(lastSync)} WIB</span>
+            <span>
+              {connection.status === "connected"
+                ? `Sync ${formatTime(lastSync)} WIB`
+                : "Belum ada sinkronisasi"}
+            </span>
           </div>
         }
       />
-      <FilterBar
-        filters={filters}
-        onChange={handleFilterChange}
-        onReset={resetFilters}
-        onRefresh={handleRefresh}
-        syncTime={`${formatTime(lastSync)} WIB`}
-      />
-      {renderActivePage(activeModule, filteredData, setActiveModule)}
+      {connection.status === "connected" && hasData && (
+        <FilterBar
+          data={allData}
+          filters={filters}
+          onChange={handleFilterChange}
+          onReset={resetFilters}
+          syncTime={`${formatTime(lastSync)} WIB`}
+        />
+      )}
+      {connection.status !== "connected" ? (
+        <DataConnectionState
+          status={connection.status}
+          message={connection.message}
+          onRetry={handleRefresh}
+        />
+      ) : !hasData ? (
+        <DataConnectionState
+          status="empty"
+          message="Snowflake terhubung, tetapi belum ada data pada tabel dashboard."
+          onRetry={handleRefresh}
+        />
+      ) : (
+        renderActivePage(activeModule, filteredData, setActiveModule, {
+          allData,
+          filters,
+          onFilterChange: handleFilterChange,
+        })
+      )}
       <footer className="app-footer">
         <span>PTFI Mine Intelligence</span>
-        <span>Prototype | Data sintetis untuk latihan query</span>
+        <span>Source: Snowflake | Read-only dashboard</span>
         <span>
-          <Icon name="shield-halved" /> Cost guardrail active
+          <Icon name="shield-halved" /> Credential tetap di server
         </span>
       </footer>
       {toast && (

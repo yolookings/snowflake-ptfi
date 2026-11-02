@@ -1,151 +1,280 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
   Bar,
-  BarChart,
   CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
+  Line,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
+  BarChart,
 } from "recharts";
 
-import { groupBy, summarizeProduction } from "../data/dashboard";
+import { DEFAULT_FILTERS, filterDashboardData, groupBy } from "../data/dashboard";
 import {
   formatCompact,
   formatCurrency,
   formatDate,
   formatPercent,
-  formatSignedPercent,
   formatTonnes,
 } from "../lib/formatters";
 import { Badge } from "../components/ui/Badge";
 import { DataTable } from "../components/ui/DataTable";
 import { Icon } from "../components/ui/Icon";
-import { MetricCard } from "../components/ui/MetricCard";
-import { Panel } from "../components/ui/Panel";
 import { ProgressBar } from "../components/ui/ProgressBar";
-import { SectionHeading } from "../components/ui/SectionHeading";
 
-function getTrendRows(rows) {
+const PALETTE = ["#118dff", "#12239e", "#e66c37", "#6b007b", "#e044a7", "#744ec2", "#d9b300"];
+const GRID = "#e6e9ee";
+const sum = (rows, key) => rows.reduce((total, row) => total + (row[key] || 0), 0);
+const avg = (rows, key) => (rows.length ? sum(rows, key) / rows.length : 0);
+
+function byDay(rows) {
   return Object.entries(groupBy(rows, "date"))
     .map(([date, group]) => ({
       date,
-      actual: group.reduce((sum, row) => sum + row.oreTonnes, 0),
-      target: group.reduce((sum, row) => sum + row.targetTonnes, 0),
+      actual: sum(group, "oreTonnes"),
+      target: sum(group, "targetTonnes"),
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function getFleetSummary(rows) {
-  return Object.entries(groupBy(rows, "assetType"))
-    .map(([assetType, group]) => ({
-      assetType,
-      uptime: group.reduce((sum, row) => sum + row.uptimePct, 0) / group.length,
+function byDimension(rows, key) {
+  return Object.entries(groupBy(rows, key))
+    .map(([label, group]) => ({
+      label,
+      actual: sum(group, "oreTonnes"),
+      target: sum(group, "targetTonnes"),
     }))
-    .sort((a, b) => a.uptime - b.uptime);
+    .sort((a, b) => b.actual - a.actual);
 }
 
-export function ExecutiveOverview({ data, onNavigate }) {
-  const [drilldown, setDrilldown] = useState("pit");
-  const trendRows = useMemo(() => getTrendRows(data.production), [data.production]);
-  const drilldownRows = useMemo(
-    () => summarizeProduction(data.production, drilldown),
-    [data.production, drilldown],
+function Visual({ title, subtitle, span = 4, hint, children }) {
+  return (
+    <section className={`visual visual--${span}`}>
+      <header className="visual__head">
+        <div>
+          <h3>{title}</h3>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
+        {hint && <span className="visual__hint">{hint}</span>}
+      </header>
+      <div className="visual__body">{children}</div>
+    </section>
   );
-  const fleetRows = useMemo(() => getFleetSummary(data.equipment), [data.equipment]);
-  const latestDate = trendRows.at(-1)?.date;
-  const latestProduction = data.production.filter((row) => row.date === latestDate);
-  const latestActual = latestProduction.reduce((sum, row) => sum + row.oreTonnes, 0);
-  const latestTarget = latestProduction.reduce((sum, row) => sum + row.targetTonnes, 0);
-  const uptime = data.equipment.length
-    ? data.equipment.reduce((sum, row) => sum + row.uptimePct, 0) / data.equipment.length
-    : 0;
-  const operatingCost = data.production.reduce((sum, row) => sum + row.operatingCostUsd, 0);
-  const readiness = data.shipments.length
-    ? data.shipments.reduce((sum, row) => sum + row.readinessPct, 0) / data.shipments.length
-    : 0;
-  const latestShipments = [...data.shipments]
-    .sort((a, b) => a.etaDate.localeCompare(b.etaDate))
-    .slice(0, 6);
+}
+
+function Kpi({ label, value, note, tone, trend, color }) {
+  return (
+    <article className="kpi">
+      <span className="kpi__label">{label}</span>
+      <strong className="kpi__value">{value}</strong>
+      {note && <span className={`kpi__note ${tone ? `kpi__note--${tone}` : ""}`}>{note}</span>}
+      {trend && trend.length > 1 && (
+        <div className="kpi__spark">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+          >
+            <AreaChart data={trend}>
+              <Area
+                type="monotone"
+                dataKey="v"
+                stroke={color}
+                strokeWidth={1.5}
+                fill={color}
+                fillOpacity={0.12}
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function Empty() {
+  return <div className="visual__empty">Tidak ada data untuk filter ini</div>;
+}
+
+export function ExecutiveOverview({ data, onNavigate, allData, filters, onFilterChange }) {
+  // Power BI style: each visual ignores its own slicer so the selection stays highlighted.
+  const contextFor = (key) =>
+    filterDashboardData(allData, { ...filters, [key]: DEFAULT_FILTERS[key] });
+  const toggle = (key, value) =>
+    onFilterChange(key, filters[key] === value ? DEFAULT_FILTERS[key] : value);
+
+  const trend = useMemo(() => byDay(data.production), [data.production]);
+  const mineralRows = useMemo(
+    () => byDimension(contextFor("mineral").production, "mineral"),
+    [allData, filters],
+  );
+  const pitRows = useMemo(
+    () => byDimension(contextFor("pit").production, "pit"),
+    [allData, filters],
+  );
+  const shiftRows = useMemo(
+    () => byDimension(contextFor("shift").production, "shift"),
+    [allData, filters],
+  );
+  const fleetStatus = useMemo(
+    () =>
+      Object.entries(groupBy(data.equipment, "maintenanceStatus")).map(([name, rows]) => ({
+        name,
+        value: rows.length,
+      })),
+    [data.equipment],
+  );
+  const destinations = useMemo(
+    () =>
+      Object.entries(groupBy(data.shipments, "destination"))
+        .map(([label, rows]) => ({ label, tonnes: sum(rows, "tonnes") }))
+        .sort((a, b) => b.tonnes - a.tonnes),
+    [data.shipments],
+  );
+  const shipments = useMemo(
+    () => [...data.shipments].sort((a, b) => a.etaDate.localeCompare(b.etaDate)).slice(0, 8),
+    [data.shipments],
+  );
+
+  const totalActual = sum(data.production, "oreTonnes");
+  const totalTarget = sum(data.production, "targetTonnes");
+  const achievement = totalTarget ? (totalActual / totalTarget) * 100 : 0;
+  const totalCost = sum(data.production, "operatingCostUsd");
+  const uptime = avg(data.equipment, "uptimePct");
+  const shipTonnes = sum(data.shipments, "tonnes");
+  const avgGrade = avg(data.production, "gradePct");
+  const sparkOre = trend.map((row) => ({ v: row.actual }));
+  const sparkAch = trend.map((row) => ({ v: row.target ? (row.actual / row.target) * 100 : 0 }));
+
+  const dimensionBar = (rows, key, color = PALETTE[0]) => (
+    <ResponsiveContainer
+      width="100%"
+      height="100%"
+    >
+      <BarChart
+        data={rows}
+        margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid
+          stroke={GRID}
+          vertical={false}
+        />
+        <XAxis
+          dataKey="label"
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontSize: 11 }}
+          interval={0}
+          tickFormatter={(value) => (value.length > 14 ? `${value.slice(0, 13)}…` : value)}
+        />
+        <YAxis
+          tickFormatter={(value) => formatCompact(value)}
+          tickLine={false}
+          axisLine={false}
+          width={44}
+        />
+        <Tooltip formatter={(value, name) => [formatTonnes(value), name]} />
+        <Legend
+          iconType="square"
+          iconSize={9}
+          wrapperStyle={{ fontSize: 11 }}
+        />
+        <Bar
+          isAnimationActive={false}
+          name="Actual"
+          dataKey="actual"
+          fill={color}
+          radius={[2, 2, 0, 0]}
+          cursor="pointer"
+          onClick={(entry) => toggle(key, entry.label)}
+        >
+          {rows.map((row) => (
+            <Cell
+              key={row.label}
+              fill={color}
+              fillOpacity={
+                filters[key] === DEFAULT_FILTERS[key] || filters[key] === row.label ? 1 : 0.3
+              }
+            />
+          ))}
+        </Bar>
+        <Bar
+          isAnimationActive={false}
+          name="Target"
+          dataKey="target"
+          fill="#c4cad3"
+          radius={[2, 2, 0, 0]}
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  );
 
   return (
-    <div className="page-content page-content--overview">
-      <div className="metric-grid">
-        <MetricCard
-          label="Produksi terakhir"
-          value={formatTonnes(latestActual)}
-          delta={formatSignedPercent(latestActual, latestTarget)}
-          note={latestDate ? `Snapshot ${formatDate(latestDate)}` : "No data"}
-          icon="chart-line"
-          tone="cyan"
+    <div className="report">
+      <div className="kpi-row">
+        <Kpi
+          label="Total ore"
+          value={formatTonnes(totalActual)}
+          note={`Target ${formatTonnes(totalTarget)}`}
+          trend={sparkOre}
+          color={PALETTE[0]}
         />
-        <MetricCard
-          label="Uptime alat berat"
-          value={formatPercent(uptime)}
-          delta="Target 85%"
-          deltaTone="neutral"
-          note="Periode terpilih"
-          icon="gauge-high"
-          tone="navy"
+        <Kpi
+          label="Pencapaian target"
+          value={formatPercent(achievement)}
+          note={achievement >= 100 ? "Di atas target" : "Di bawah target"}
+          tone={achievement >= 100 ? "good" : "bad"}
+          trend={sparkAch}
+          color={achievement >= 100 ? "#1d9b68" : "#d64550"}
         />
-        <MetricCard
+        <Kpi
+          label="Rata-rata grade"
+          value={formatPercent(avgGrade, 2)}
+          note={`${data.production.length} catatan produksi`}
+        />
+        <Kpi
           label="Biaya operasional"
-          value={formatCurrency(operatingCost)}
-          delta="Akumulasi periode"
-          deltaTone="neutral"
-          note="Production operations"
-          icon="wallet"
-          tone="red"
+          value={formatCurrency(totalCost)}
+          note={`${formatCurrency(totalActual ? totalCost / totalActual : 0)} / ton`}
         />
-        <MetricCard
-          label="Shipment readiness"
-          value={formatPercent(readiness)}
-          delta={`${data.shipments.length} shipment aktif`}
-          deltaTone={readiness >= 85 ? "positive" : "warning"}
-          note="Supply chain control"
-          icon="ship"
-          tone="gold"
+        <Kpi
+          label="Uptime alat"
+          value={formatPercent(uptime)}
+          note={uptime >= 85 ? "Memenuhi target 85%" : "Di bawah target 85%"}
+          tone={uptime >= 85 ? "good" : "bad"}
+        />
+        <Kpi
+          label="Tonase pengiriman"
+          value={formatTonnes(shipTonnes)}
+          note={`${data.shipments.length} shipment`}
         />
       </div>
 
-      <SectionHeading
-        eyebrow=""
-        title="Production trend"
-        subtitle="Actual ore terhadap target harian pada periode terpilih."
-        action={
-          <button
-            className="button button--link"
-            type="button"
-            onClick={() => onNavigate("production")}
-          >
-            Open production detail <Icon name="arrow-right" />
-          </button>
-        }
-      />
-      <div className="dashboard-grid dashboard-grid--hero">
-        <Panel className="chart-panel">
-          <div className="chart-panel__legend">
-            <span>
-              <i className="legend-dot legend-dot--cyan" /> Actual ore
-            </span>
-            <span>
-              <i className="legend-dot legend-dot--red" /> Target
-            </span>
-            <span className="chart-panel__muted">Tonnes / day</span>
-          </div>
-          <div className="chart-wrap chart-wrap--hero">
+      <div className="canvas">
+        <Visual
+          title="Tren produksi harian"
+          subtitle="Actual (kolom) vs target (garis)"
+          span={8}
+        >
+          {trend.length ? (
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
-              <AreaChart
-                data={trendRows}
-                margin={{ top: 12, right: 16, left: -12, bottom: 0 }}
+              <ComposedChart
+                data={trend}
+                margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#e2e8ec"
+                  stroke={GRID}
                   vertical={false}
                 />
                 <XAxis
@@ -153,78 +282,173 @@ export function ExecutiveOverview({ data, onNavigate }) {
                   tickFormatter={(value) => formatDate(value)}
                   tickLine={false}
                   axisLine={false}
-                  minTickGap={28}
+                  minTickGap={24}
                 />
                 <YAxis
                   tickFormatter={(value) => formatCompact(value)}
                   tickLine={false}
                   axisLine={false}
-                  width={42}
+                  width={44}
                 />
                 <Tooltip
-                  cursor={{ stroke: "#b8c9d7", strokeDasharray: "4 4" }}
                   labelFormatter={(value) => formatDate(value)}
-                  formatter={(value, name) => [
-                    formatTonnes(value),
-                    name === "actual" ? "Actual ore" : "Target",
-                  ]}
+                  formatter={(value, name) => [formatTonnes(value), name]}
                 />
-                <Area
-                  type="monotone"
+                <Legend
+                  iconType="square"
+                  iconSize={9}
+                  wrapperStyle={{ fontSize: 11 }}
+                />
+                <Bar
+                  isAnimationActive={false}
+                  name="Actual"
                   dataKey="actual"
-                  stroke="var(--color-primary)"
-                  strokeWidth={2}
-                  fill="var(--color-primary-light)"
+                  fill={PALETTE[0]}
+                  radius={[2, 2, 0, 0]}
+                  maxBarSize={44}
                 />
-                <Area
-                  type="monotone"
+                <Line
+                  isAnimationActive={false}
+                  name="Target"
                   dataKey="target"
-                  stroke="#8b98a3"
-                  strokeWidth={1.5}
-                  strokeDasharray="5 5"
-                  fill="transparent"
+                  stroke={PALETTE[2]}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
                 />
-              </AreaChart>
+              </ComposedChart>
             </ResponsiveContainer>
-          </div>
-          <div className="chart-panel__footer">
-            <span>
-              <Icon name="circle-info" /> Trend agregasi seluruh pit dan shift.
-            </span>
-            <span className="chart-panel__footer-strong">
-              {formatTonnes(trendRows.reduce((sum, row) => sum + row.actual, 0))} total ore
-            </span>
-          </div>
-        </Panel>
+          ) : (
+            <Empty />
+          )}
+        </Visual>
 
-        <Panel
-          title="Drill-down mix"
-          subtitle="Klik dimensi untuk membandingkan kontribusi ore."
-          actions={
-            <select
-              className="compact-select"
-              value={drilldown}
-              onChange={(event) => setDrilldown(event.target.value)}
-            >
-              <option value="pit">Pit</option>
-              <option value="shift">Shift</option>
-              <option value="mineral">Mineral</option>
-            </select>
-          }
-          className="chart-panel"
+        <Visual
+          title="Komposisi mineral"
+          subtitle="Share ore (klik untuk filter)"
+          span={4}
         >
-          <div className="chart-wrap chart-wrap--drilldown">
+          {mineralRows.length ? (
+            <div className="donut">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+                <PieChart>
+                  <Pie
+                    isAnimationActive={false}
+                    data={mineralRows}
+                    dataKey="actual"
+                    nameKey="label"
+                    innerRadius="58%"
+                    outerRadius="86%"
+                    paddingAngle={2}
+                    cursor="pointer"
+                    onClick={(entry) => toggle("mineral", entry.label)}
+                  >
+                    {mineralRows.map((row, index) => (
+                      <Cell
+                        key={row.label}
+                        fill={PALETTE[index % PALETTE.length]}
+                        fillOpacity={
+                          filters.mineral === DEFAULT_FILTERS.mineral ||
+                          filters.mineral === row.label
+                            ? 1
+                            : 0.25
+                        }
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatTonnes(value)} />
+                  <Legend
+                    iconType="square"
+                    iconSize={9}
+                    wrapperStyle={{ fontSize: 11 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <Empty />
+          )}
+        </Visual>
+
+        <Visual
+          title="Produksi per pit"
+          subtitle="Klik kolom untuk filter"
+          span={4}
+        >
+          {pitRows.length ? dimensionBar(pitRows, "pit") : <Empty />}
+        </Visual>
+
+        <Visual
+          title="Produksi per shift"
+          subtitle="Klik kolom untuk filter"
+          span={4}
+        >
+          {shiftRows.length ? dimensionBar(shiftRows, "shift", PALETTE[1]) : <Empty />}
+        </Visual>
+
+        <Visual
+          title="Status alat berat"
+          subtitle="Jumlah catatan per status"
+          span={4}
+        >
+          {fleetStatus.length ? (
+            <div className="donut">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+                <PieChart>
+                  <Pie
+                    isAnimationActive={false}
+                    data={fleetStatus}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="58%"
+                    outerRadius="86%"
+                    paddingAngle={2}
+                  >
+                    {fleetStatus.map((row) => (
+                      <Cell
+                        key={row.name}
+                        fill={
+                          row.name === "Active" || row.name === "Normal" ? "#1d9b68" : "#d64550"
+                        }
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend
+                    iconType="square"
+                    iconSize={9}
+                    wrapperStyle={{ fontSize: 11 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <Empty />
+          )}
+        </Visual>
+
+        <Visual
+          title="Tonase per tujuan"
+          subtitle="Total pengiriman"
+          span={5}
+        >
+          {destinations.length ? (
             <ResponsiveContainer
               width="100%"
               height="100%"
             >
               <BarChart
-                data={drilldownRows.sort((a, b) => a.actual - b.actual)}
+                data={destinations}
                 layout="vertical"
-                margin={{ top: 8, right: 22, left: 4, bottom: 0 }}
+                margin={{ top: 4, right: 24, left: 4, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="#e2e8ec"
+                  stroke={GRID}
                   horizontal={false}
                 />
                 <XAxis
@@ -236,167 +460,88 @@ export function ExecutiveOverview({ data, onNavigate }) {
                 <YAxis
                   type="category"
                   dataKey="label"
-                  width={112}
+                  width={110}
                   tickLine={false}
                   axisLine={false}
                   tick={{ fontSize: 11 }}
                 />
-                <Tooltip formatter={(value) => [formatTonnes(value), "Actual ore"]} />
+                <Tooltip formatter={(value) => [formatTonnes(value), "Tonase"]} />
                 <Bar
-                  dataKey="actual"
-                  fill="var(--color-navy)"
+                  isAnimationActive={false}
+                  dataKey="tonnes"
+                  fill={PALETTE[5]}
                   radius={[0, 2, 2, 0]}
-                  barSize={24}
+                  barSize={22}
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-          <div className="panel-link-row">
-            <span>Highest contribution</span>
-            <strong>{drilldownRows.sort((a, b) => b.actual - a.actual)[0]?.label || "-"}</strong>
-          </div>
-        </Panel>
-      </div>
+          ) : (
+            <Empty />
+          )}
+        </Visual>
 
-      <SectionHeading
-        eyebrow=""
-        title="Fleet and shipment status"
-        subtitle="Sinyal operasional yang perlu diperhatikan sebelum masuk ke detail."
-      />
-      <div className="dashboard-grid dashboard-grid--lower">
-        <Panel
-          title="Fleet uptime by asset type"
-          subtitle="Rata-rata uptime selama periode terpilih."
-          actions={
-            <button
-              className="button button--link"
-              type="button"
-              onClick={() => onNavigate("fleet")}
-            >
-              View fleet <Icon name="arrow-right" />
-            </button>
-          }
-          className="chart-panel"
-        >
-          <div className="chart-wrap chart-wrap--fleet">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <BarChart
-                data={fleetRows}
-                layout="vertical"
-                margin={{ top: 8, right: 28, left: 4, bottom: 0 }}
-              >
-                <CartesianGrid
-                  stroke="#e2e8ec"
-                  horizontal={false}
-                />
-                <XAxis
-                  type="number"
-                  domain={[0, 100]}
-                  tickFormatter={(value) => `${value}%`}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="assetType"
-                  width={92}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11 }}
-                />
-                <Tooltip formatter={(value) => [formatPercent(value), "Uptime"]} />
-                <Bar
-                  dataKey="uptime"
-                  fill="var(--color-primary)"
-                  radius={[0, 2, 2, 0]}
-                  barSize={20}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Panel>
-
-        <Panel
-          title="Shipment watchlist"
-          subtitle="Manifest dengan ETA terdekat."
-          actions={
+        <Visual
+          title="Daftar pengiriman"
+          subtitle="Urut ETA terdekat"
+          span={7}
+          hint={
             <button
               className="button button--link"
               type="button"
               onClick={() => onNavigate("logistics")}
             >
-              Open control tower <Icon name="arrow-right" />
+              Detail <Icon name="arrow-right" />
             </button>
           }
         >
-          <DataTable
-            rows={latestShipments}
-            columns={[
-              {
-                key: "vessel",
-                label: "Vessel",
-                render: (row) => <strong className="table-primary">{row.vessel}</strong>,
-              },
-              {
-                key: "destination",
-                label: "Destination",
-                render: (row) => <span>{row.destination}</span>,
-              },
-              { key: "etaDate", label: "ETA", render: (row) => formatDate(row.etaDate) },
-              {
-                key: "readinessPct",
-                label: "Ready",
-                align: "right",
-                render: (row) => (
-                  <ProgressBar
-                    value={row.readinessPct}
-                    showValue
-                  />
-                ),
-              },
-              {
-                key: "status",
-                label: "Status",
-                render: (row) => (
-                  <Badge
-                    tone={
-                      row.status === "Documentation Hold"
-                        ? "danger"
-                        : row.status === "At Port"
-                          ? "info"
-                          : "success"
-                    }
-                  >
-                    {row.status}
-                  </Badge>
-                ),
-              },
-            ]}
-          />
-        </Panel>
-      </div>
-
-      <div className="insight-strip">
-        <div className="insight-strip__icon">
-          <Icon name="flag" />
-        </div>
-        <div>
-          <strong>Follow-up</strong>
-          <p>
-            Dokumentasi shipment dengan readiness di bawah 85% sebaiknya di-follow-up sebelum window
-            loading berikutnya.
-          </p>
-        </div>
-        <button
-          className="button button--dark"
-          type="button"
-          onClick={() => onNavigate("sql-lab")}
-        >
-          Open Data Lab <Icon name="arrow-right" />
-        </button>
+          <div className="visual__scroll">
+            <DataTable
+              rows={shipments}
+              columns={[
+                {
+                  key: "vessel",
+                  label: "Vessel",
+                  render: (row) => <strong className="table-primary">{row.vessel}</strong>,
+                },
+                { key: "destination", label: "Tujuan" },
+                { key: "etaDate", label: "ETA", render: (row) => formatDate(row.etaDate) },
+                {
+                  key: "tonnes",
+                  label: "Ton",
+                  align: "right",
+                  render: (row) => formatCompact(row.tonnes),
+                },
+                {
+                  key: "readinessPct",
+                  label: "Ready",
+                  render: (row) => (
+                    <ProgressBar
+                      value={row.readinessPct}
+                      showValue
+                    />
+                  ),
+                },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (row) => (
+                    <Badge
+                      tone={
+                        row.status === "Documentation Hold"
+                          ? "danger"
+                          : row.status === "At Port"
+                            ? "info"
+                            : "success"
+                      }
+                    >
+                      {row.status}
+                    </Badge>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </Visual>
       </div>
     </div>
   );

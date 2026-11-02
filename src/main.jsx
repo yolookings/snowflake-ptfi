@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./styles/avian.css";
+import "./styles/report.css";
 import { App } from "./App";
 
 createRoot(document.getElementById("root")).render(

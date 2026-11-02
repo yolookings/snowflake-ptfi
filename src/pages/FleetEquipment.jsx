@@ -85,7 +85,7 @@ export function FleetEquipment({ data }) {
           value={`${Math.round(fuelLiters / 1000).toLocaleString("id-ID")}K L`}
           delta="Fleet aggregate"
           deltaTone="neutral"
-          note="Estimated demo data"
+          note="Total dari Snowflake"
           icon="gas-pump"
           tone="gold"
         />
@@ -244,7 +244,7 @@ export function FleetEquipment({ data }) {
           ]}
         />
         <div className="panel-footer-note">
-          <Icon name="circle-info" /> Snapshot mengikuti periode paling akhir pada data demo.
+          <Icon name="circle-info" /> Snapshot mengikuti periode paling akhir pada data Snowflake.
         </div>
       </Panel>
     </div>
