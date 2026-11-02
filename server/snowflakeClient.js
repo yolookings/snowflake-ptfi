@@ -5,6 +5,11 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const snowflake = require("snowflake-sdk");
 
+// Vercel's filesystem is read-only except /tmp, so the SDK log file must live there.
+if (process.env.VERCEL) {
+  snowflake.configure({ logLevel: "ERROR", logFilePath: "/tmp/snowflake.log" });
+}
+
 const config = {
   account: process.env.SNOWFLAKE_ACCOUNT?.trim(),
   username: process.env.SNOWFLAKE_USER?.trim(),

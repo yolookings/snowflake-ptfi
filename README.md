@@ -61,9 +61,19 @@ Validasi sebelum commit: `npm run check` (format, lint, build).
 bundle browser. `env.txt` adalah salinan `.env` tanpa komentar dan nilai kosong, dipakai untuk fitur
 **Import .env** di Vercel (Project Settings → Environment Variables).
 
-> **Catatan deploy Vercel:** `server/index.js` adalah server Node yang berjalan terus-menerus (lokal). Vercel
-> hanya menjalankan serverless function, jadi untuk produksi endpoint `/api/dashboard` perlu dibungkus sebagai
-> function (mis. `api/dashboard.js` yang memanggil `getDashboardData()`). Environment variable di atas tetap sama.
+## Deploy ke Vercel
+
+Di Vercel tidak ada `npm run api` dan `npm run dev`. Vite di-build menjadi file statis, dan endpoint data berjalan
+sebagai serverless function (`api/dashboard.js`, `api/health.js`) yang memakai kode Snowflake yang sama dengan
+`server/`. Cukup klik link Vercel untuk membuka dashboard.
+
+1. Push repo ke GitHub, lalu **Add New → Project** di Vercel dan pilih repo ini (preset *Vite* terdeteksi otomatis).
+2. Di **Settings → Environment Variables**, pakai **Import .env** dengan `env.txt` (centang Production, Preview).
+3. **Deploy**. Setelah selesai, buka `https://<project>.vercel.app/api/health` (harus `"snowflake":"configured"`),
+   lalu `/api/dashboard`, lalu halaman utama.
+
+Mengubah environment variable butuh **Redeploy** agar berlaku. Jika Snowflake memakai network policy, izinkan IP
+keluar Vercel (atau gunakan Vercel Static IPs).
 
 ## Sumber data
 
@@ -91,6 +101,7 @@ Produksi dan alat berat hanya diambil 45 hari terakhir. Script pembuat tabel ada
 ├── package.json                # script: dev, api, build, lint, fmt, check
 ├── .env / .env.example         # credential lokal (diabaikan Git) / template aman
 ├── env.txt                     # salinan .env untuk Import di Vercel (diabaikan Git)
+├── api/                        # serverless function untuk Vercel (dashboard.js, health.js)
 ├── server/
 │   ├── index.js
 │   └── snowflakeClient.js

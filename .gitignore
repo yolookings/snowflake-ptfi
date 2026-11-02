@@ -35,3 +35,4 @@ service-account*.json
 
 # Vercel import file (contains secrets)
 env.txt
+snowflake.log
